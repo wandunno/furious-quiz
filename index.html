@@ -1,0 +1,1443 @@
+<!doctype html>
+<html lang="ms">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Furious — Trivia Challenge</title>
+
+    <!-- ============================================================
+  FONT: Bebas Neue (tajuk), Barlow (body)
+  Tukar di sini kalau nak font lain
+  ============================================================ -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:ital,wght@0,400;0,500;0,600;1,400&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      /* ============================================================
+  SEMUA CLASS DIPREFIX DENGAN: tfq-
+  Ini memastikan kod ini TIDAK mengganggu CSS lain di halaman
+  ============================================================ */
+
+      /* ── Reset scoped ── */
+      .tfq-wrap,
+      .tfq-wrap * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      .tfq-wrap button {
+        border: none;
+        background: none;
+        cursor: pointer;
+        font-family: inherit;
+      }
+      .tfq-wrap input {
+        font-family: inherit;
+      }
+
+      /* ── CONFIG VARIABLES ── */
+      /* Tukar warna utama di sini */
+      .tfq-wrap {
+        --tfq-red: #e24b4a; /* Warna utama aksi */
+        --tfq-red-dark: #c93f3e; /* Hover state */
+        --tfq-gold: #ef9f27; /* Top 3 rank */
+        --tfq-bg: #0d0d0d; /* Background utama */
+        --tfq-bg2: #111111; /* Background kad */
+        --tfq-bg3: #161616; /* Background input/option */
+        --tfq-border: #2a2a2a; /* Border standard */
+        --tfq-border2: #222222; /* Border halus */
+        --tfq-text: #f5f0e8; /* Teks utama */
+        --tfq-muted: #888888; /* Teks redup */
+        --tfq-hint: #444444; /* Teks hints/masa */
+        --tfq-correct-bg: #0d2e1a;
+        --tfq-correct-bd: #2d7a47;
+        --tfq-correct-tx: #5cdb8a;
+        --tfq-wrong-bg: #2e0d0d;
+        --tfq-wrong-bd: #7a2d2d;
+        --tfq-wrong-tx: #db5c5c;
+
+        /* ── TIMER: Tukar tempoh setiap soalan (saat) ── */
+        --tfq-timer-secs: 20;
+
+        font-family: "Barlow", sans-serif;
+        background: var(--tfq-bg);
+        color: var(--tfq-text);
+        width: 100%;
+        max-width: 560px;
+        margin: 0 auto;
+        border: 1px solid var(--tfq-border2);
+        border-radius: 10px;
+        overflow: hidden;
+      }
+
+      /* ── MASTHEAD BANNER (16:9) ──
+  Saiz asal: 560 x 315px (16:9 pada max-width)
+  Tukar src dalam HTML untuk guna imej sendiri
+  ────────────────────────────────────────────── */
+      .tfq-masthead {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16 / 9; /* Kekal 16:9 pada semua saiz skrin */
+        background: #1a0a0a;
+        overflow: hidden;
+        border-bottom: 3px solid var(--tfq-red);
+      }
+      .tfq-masthead img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+      .tfq-masthead-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          to bottom,
+          rgba(0, 0, 0, 0.1) 0%,
+          rgba(13, 13, 13, 0.85) 100%
+        );
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+        padding: 1.25rem 1.5rem;
+        text-align: center;
+      }
+      .tfq-masthead-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        background: var(--tfq-wrong-bg);
+        color: var(--tfq-wrong-tx);
+        margin-bottom: 6px;
+      }
+      /* ── TUKAR NAMA PRODUKSI DI SINI ── */
+      .tfq-masthead-badge span {
+        /* Tukar nama syarikat/event di sini: */
+        /* Default: "Gempak Campus" — dah set dalam HTML */
+      }
+      .tfq-masthead h1 {
+        font-family: "Bebas Neue", sans-serif;
+        font-size: clamp(2rem, 8vw, 3.2rem); /* Responsive font */
+        letter-spacing: 5px;
+        line-height: 1;
+        color: var(--tfq-text);
+        text-shadow: 0 2px 20px rgba(0, 0, 0, 0.8);
+      }
+      .tfq-masthead h1 em {
+        color: var(--tfq-red);
+        font-style: normal;
+      }
+      .tfq-masthead-sub {
+        font-size: 11px;
+        color: rgba(245, 240, 232, 0.6);
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        margin-top: 4px;
+      }
+
+      /* ── SCREENS ── */
+      .tfq-screen {
+        display: none;
+        padding: 1.5rem;
+      }
+      .tfq-screen.tfq-active {
+        display: block;
+      }
+
+      /* ── PROGRESS BAR ── */
+      .tfq-prog-bar {
+        height: 3px;
+        background: var(--tfq-border2);
+      }
+      .tfq-prog-fill {
+        height: 100%;
+        background: var(--tfq-red);
+        transition: width 0.4s ease;
+      }
+      .tfq-prog-label {
+        font-size: 11px;
+        color: var(--tfq-hint);
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 1.5rem 0;
+        letter-spacing: 1px;
+      }
+
+      /* ── TIMER BAR ── */
+      .tfq-timer-bar {
+        height: 3px;
+        background: var(--tfq-border2);
+        margin-top: 2px;
+      }
+      .tfq-timer-fill {
+        height: 100%;
+        background: var(--tfq-gold);
+        transition: width 1s linear;
+      }
+      .tfq-timer-fill.tfq-urgent {
+        background: var(--tfq-red);
+      }
+
+      /* ── START SCREEN ── */
+      .tfq-start {
+        text-align: center;
+        padding: 1.5rem;
+      }
+      .tfq-start-desc {
+        color: var(--tfq-muted);
+        font-size: 0.9rem;
+        line-height: 1.7;
+        margin-bottom: 1.25rem;
+      }
+      .tfq-start-meta {
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+      .tfq-start-meta-item {
+        text-align: center;
+      }
+      .tfq-start-meta-num {
+        font-family: "Bebas Neue", sans-serif;
+        font-size: 1.8rem;
+        color: var(--tfq-red);
+        line-height: 1;
+      }
+      .tfq-start-meta-lbl {
+        font-size: 11px;
+        color: var(--tfq-hint);
+        letter-spacing: 1px;
+        text-transform: uppercase;
+      }
+
+      /* ── MINI LEADERBOARD (start screen) ── */
+      .tfq-mini-lb {
+        background: var(--tfq-bg2);
+        border: 1px solid var(--tfq-border);
+        border-radius: 8px;
+        margin-bottom: 1.25rem;
+        overflow: hidden;
+      }
+      .tfq-mini-lb-hdr {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.6rem 0.75rem;
+        border-bottom: 1px solid var(--tfq-border2);
+      }
+      .tfq-mini-lb-title {
+        font-family: "Bebas Neue", sans-serif;
+        font-size: 1rem;
+        letter-spacing: 2px;
+        color: var(--tfq-text);
+      }
+      .tfq-mini-lb-day {
+        font-size: 11px;
+        color: var(--tfq-hint);
+        letter-spacing: 1px;
+      }
+      .tfq-mini-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0.5rem 0.75rem;
+        border-bottom: 1px solid var(--tfq-border2);
+      }
+      .tfq-mini-row:last-child {
+        border-bottom: none;
+      }
+      .tfq-mini-rank {
+        font-family: "Bebas Neue", sans-serif;
+        font-size: 1rem;
+        width: 22px;
+        text-align: center;
+        flex-shrink: 0;
+        color: var(--tfq-hint);
+      }
+      .tfq-mini-rank.tfq-top {
+        color: var(--tfq-gold);
+      }
+      .tfq-mini-name {
+        flex: 1;
+        font-size: 0.85rem;
+        color: #ccc;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .tfq-mini-score {
+        font-family: "Bebas Neue", sans-serif;
+        font-size: 1rem;
+        color: var(--tfq-red);
+      }
+      .tfq-mini-empty {
+        padding: 1rem;
+        text-align: center;
+        font-size: 0.8rem;
+        color: var(--tfq-hint);
+      }
+      .tfq-mini-loading {
+        padding: 0.75rem;
+        text-align: center;
+        font-size: 11px;
+        color: var(--tfq-hint);
+        letter-spacing: 1px;
+      }
+
+      /* ── BUTTONS ── */
+      .tfq-btn-primary {
+        width: 100%;
+        padding: 0.9rem;
+        background: var(--tfq-red);
+        color: var(--tfq-text);
+        font-family: "Bebas Neue", sans-serif;
+        font-size: 1.4rem;
+        letter-spacing: 4px;
+        border-radius: 6px;
+        transition:
+          background 0.15s,
+          transform 0.1s;
+        margin-bottom: 8px;
+      }
+      .tfq-btn-primary:hover {
+        background: var(--tfq-red-dark);
+      }
+      .tfq-btn-primary:active {
+        transform: scale(0.98);
+      }
+      .tfq-btn-primary:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+      .tfq-btn-outline {
+        padding: 0.7rem 1rem;
+        background: none;
+        border: 1px solid var(--tfq-border);
+        color: var(--tfq-muted);
+        font-family: "Bebas Neue", sans-serif;
+        font-size: 0.95rem;
+        letter-spacing: 2px;
+        border-radius: 6px;
+        transition: all 0.15s;
+      }
+      .tfq-btn-outline:hover {
+        border-color: #555;
+        color: #bbb;
+      }
+      .tfq-btn-skip {
+        background: none;
+        border: none;
+        color: var(--tfq-hint);
+        font-size: 0.8rem;
+        text-decoration: underline;
+        padding: 4px;
+        display: block;
+        margin: 0 auto;
+      }
+      .tfq-btn-skip:hover {
+        color: var(--tfq-muted);
+      }
+      .tfq-btn-group {
+        display: flex;
+        gap: 8px;
+        margin-top: 0.75rem;
+      }
+      .tfq-btn-group .tfq-btn-outline {
+        flex: 1;
+      }
+
+      /* ── QUIZ SCREEN ── */
+      .tfq-q-inner {
+        padding: 1.25rem 1.5rem;
+      }
+      .tfq-q-num {
+        font-size: 11px;
+        color: var(--tfq-red);
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        margin-bottom: 0.4rem;
+      }
+      .tfq-q-text {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--tfq-text);
+        line-height: 1.45;
+        margin-bottom: 1.25rem;
+      }
+
+      /* ── STREAK BADGE ── */
+      .tfq-streak {
+        display: none;
+        align-items: center;
+        gap: 6px;
+        background: #2e200d;
+        border: 1px solid #5a3a0a;
+        color: var(--tfq-gold);
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 1px;
+        padding: 4px 10px;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+        width: fit-content;
+      }
+      .tfq-streak.tfq-visible {
+        display: flex;
+      }
+
+      /* ── OPTIONS ── */
+      .tfq-options {
+        display: grid;
+        gap: 9px;
+      }
+      .tfq-opt {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0.75rem 1rem;
+        background: var(--tfq-bg3);
+        border: 1px solid var(--tfq-border);
+        color: #ccc;
+        font-size: 0.92rem;
+        border-radius: 6px;
+        text-align: left;
+        width: 100%;
+        transition:
+          background 0.12s,
+          border-color 0.12s,
+          color 0.12s,
+          transform 0.1s;
+      }
+      .tfq-opt:hover:not(.tfq-opt-locked) {
+        background: #1f1f1f;
+        border-color: #444;
+        color: var(--tfq-text);
+        transform: translateX(3px);
+      }
+      .tfq-opt-letter {
+        width: 26px;
+        height: 26px;
+        border-radius: 4px;
+        background: #222;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 600;
+        flex-shrink: 0;
+        transition: all 0.15s;
+      }
+      .tfq-opt.tfq-correct {
+        background: var(--tfq-correct-bg);
+        border-color: var(--tfq-correct-bd);
+        color: var(--tfq-correct-tx);
+      }
+      .tfq-opt.tfq-correct .tfq-opt-letter {
+        background: var(--tfq-correct-bd);
+        color: #fff;
+      }
+      .tfq-opt.tfq-wrong {
+        background: var(--tfq-wrong-bg);
+        border-color: var(--tfq-wrong-bd);
+        color: var(--tfq-wrong-tx);
+      }
+      .tfq-opt.tfq-wrong .tfq-opt-letter {
+        background: var(--tfq-wrong-bd);
+        color: #fff;
+      }
+      .tfq-opt.tfq-opt-locked {
+        cursor: default;
+      }
+
+      /* Feedback pill selepas jawab */
+      .tfq-feedback {
+        font-size: 12px;
+        font-weight: 500;
+        padding: 5px 0 0;
+        min-height: 20px;
+        color: var(--tfq-hint);
+        letter-spacing: 0.5px;
+      }
+      .tfq-feedback.tfq-fb-correct {
+        color: var(--tfq-correct-tx);
+      }
+      .tfq-feedback.tfq-fb-wrong {
+        color: var(--tfq-wrong-tx);
+      }
+
+      /* Next button */
+      .tfq-next-btn {
+        margin-top: 1rem;
+        width: 100%;
+        padding: 0.85rem;
+        background: var(--tfq-red);
+        color: var(--tfq-text);
+        font-family: "Bebas Neue", sans-serif;
+        font-size: 1.3rem;
+        letter-spacing: 3px;
+        border-radius: 6px;
+        opacity: 0;
+        pointer-events: none;
+        transition:
+          opacity 0.3s,
+          background 0.15s;
+        border: none;
+        cursor: pointer;
+      }
+      .tfq-next-btn.tfq-show {
+        opacity: 1;
+        pointer-events: all;
+      }
+      .tfq-next-btn:hover {
+        background: var(--tfq-red-dark);
+      }
+
+      /* ── RESULT SCREEN ── */
+      .tfq-result {
+        text-align: center;
+        padding: 1.5rem;
+      }
+      .tfq-result-lbl {
+        font-size: 11px;
+        color: var(--tfq-hint);
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+      }
+      .tfq-result-score {
+        font-family: "Bebas Neue", sans-serif;
+        font-size: 5.5rem;
+        color: var(--tfq-red);
+        line-height: 1;
+      }
+      .tfq-result-total {
+        font-size: 13px;
+        color: var(--tfq-hint);
+        margin-bottom: 6px;
+      }
+      .tfq-result-title {
+        font-family: "Bebas Neue", sans-serif;
+        font-size: 1.7rem;
+        color: var(--tfq-text);
+        letter-spacing: 2px;
+        margin: 6px 0 4px;
+      }
+      .tfq-result-desc {
+        font-size: 0.85rem;
+        color: var(--tfq-muted);
+        margin-bottom: 1.25rem;
+        line-height: 1.6;
+      }
+
+      /* Score bar breakdown */
+      .tfq-score-bar {
+        display: flex;
+        height: 8px;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 1.25rem;
+        background: var(--tfq-border2);
+      }
+      .tfq-score-bar-fill {
+        height: 100%;
+        background: var(--tfq-red);
+        border-radius: 4px;
+        transition: width 0.8s ease;
+      }
+
+      /* Input */
+      .tfq-input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background: var(--tfq-bg3);
+        border: 1px solid var(--tfq-border);
+        color: var(--tfq-text);
+        font-size: 1rem;
+        border-radius: 6px;
+        margin-bottom: 6px;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+      .tfq-input:focus {
+        border-color: var(--tfq-red);
+      }
+      .tfq-input::placeholder {
+        color: var(--tfq-hint);
+      }
+      .tfq-error {
+        color: var(--tfq-red);
+        font-size: 0.78rem;
+        min-height: 18px;
+        margin-bottom: 6px;
+        text-align: left;
+      }
+      .tfq-status-ok {
+        background: var(--tfq-correct-bg);
+        color: var(--tfq-correct-tx);
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 0.85rem;
+        margin-bottom: 8px;
+        text-align: center;
+      }
+      .tfq-status-err {
+        background: var(--tfq-wrong-bg);
+        color: var(--tfq-wrong-tx);
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 0.85rem;
+        margin-bottom: 8px;
+        text-align: center;
+      }
+
+      /* ── LEADERBOARD SCREEN ── */
+      .tfq-lb-title {
+        font-family: "Bebas Neue", sans-serif;
+        font-size: 2rem;
+        letter-spacing: 3px;
+        color: var(--tfq-text);
+        margin-bottom: 3px;
+      }
+      .tfq-tabs {
+        display: flex;
+        border-bottom: 1px solid var(--tfq-border2);
+        margin-bottom: 1rem;
+      }
+      .tfq-tab {
+        flex: 1;
+        padding: 0.6rem;
+        background: none;
+        color: var(--tfq-hint);
+        font-size: 0.85rem;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s;
+        letter-spacing: 1px;
+        text-align: center;
+        cursor: pointer;
+        border: none;
+        border-bottom: 2px solid transparent;
+      }
+      .tfq-tab.tfq-active {
+        color: var(--tfq-red);
+        border-bottom-color: var(--tfq-red);
+      }
+      .tfq-lb-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0.65rem 0.75rem;
+        border-radius: 6px;
+        margin-bottom: 5px;
+        background: var(--tfq-bg2);
+        border: 1px solid #1e1e1e;
+      }
+      .tfq-lb-row.tfq-me {
+        border-color: var(--tfq-red);
+        background: #1a0d0d;
+      }
+      .tfq-lb-rank {
+        font-family: "Bebas Neue", sans-serif;
+        font-size: 1.05rem;
+        color: var(--tfq-hint);
+        width: 26px;
+        text-align: center;
+        flex-shrink: 0;
+      }
+      .tfq-lb-rank.tfq-top {
+        color: var(--tfq-gold);
+      }
+      .tfq-lb-name {
+        flex: 1;
+        font-size: 0.88rem;
+        font-weight: 500;
+        color: #ccc;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .tfq-lb-score {
+        font-family: "Bebas Neue", sans-serif;
+        font-size: 1.15rem;
+        color: var(--tfq-red);
+        flex-shrink: 0;
+      }
+      .tfq-lb-time {
+        font-size: 11px;
+        color: var(--tfq-hint);
+        flex-shrink: 0;
+      }
+      .tfq-lb-empty {
+        text-align: center;
+        padding: 2rem 1rem;
+        color: var(--tfq-hint);
+        font-size: 0.85rem;
+        line-height: 1.7;
+      }
+      .tfq-lb-loading {
+        text-align: center;
+        padding: 2rem;
+        color: var(--tfq-hint);
+        font-size: 0.8rem;
+        letter-spacing: 2px;
+      }
+
+      /* ── MOBILE RESPONSIVE ── */
+      @media (max-width: 560px) {
+        .tfq-wrap {
+          border-left: none;
+          border-right: none;
+          border-top: none;
+          border-radius: 0;
+          max-width: 100%;
+        }
+        .tfq-masthead h1 {
+          font-size: clamp(1.8rem, 10vw, 3rem);
+        }
+        .tfq-q-text {
+          font-size: 1rem;
+        }
+        .tfq-result-score {
+          font-size: 4.5rem;
+        }
+      }
+      @media (max-width: 380px) {
+        .tfq-screen {
+          padding: 1rem;
+        }
+        .tfq-q-inner {
+          padding: 1rem;
+        }
+        .tfq-opt {
+          font-size: 0.85rem;
+          padding: 0.65rem 0.75rem;
+        }
+        .tfq-masthead-overlay {
+          padding: 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body style="background: #0d0d0d; padding: 0; margin: 0; min-height: 100vh">
+    <!-- ============================================================
+  WRAPPER UTAMA — semua kod quiz dalam .tfq-wrap
+  ============================================================ -->
+    <div class="tfq-wrap" id="tfqRoot">
+      <!-- ============================================================
+    MASTHEAD BANNER (16:9)
+    ── CARA TUKAR IMEJ ──
+    1. Upload imej kau ke folder yang sama dengan index.html
+    2. Tukar src="" kepada nama fail imej kau
+       Contoh: src="banner-furious.jpg"
+    3. Saiz cadangan: 1120 x 630px (atau mana-mana nisbah 16:9)
+    4. Format: JPG/PNG/WEBP
+    Kalau nak guna URL terus: src="https://example.com/gambar.jpg"
+    ============================================================ -->
+      <div class="tfq-masthead">
+        <img
+          src=""
+          alt="The Furious 2026 Banner"
+          id="tfqBannerImg"
+          onerror="this.style.display = 'none'"
+        />
+        <div class="tfq-masthead-overlay">
+          <!-- TUKAR NAMA EVENT/SYARIKAT DI SINI -->
+          <div class="tfq-masthead-badge"><span>Gempak Campus</span></div>
+          <!-- TUKAR TAJUK QUIZ DI SINI -->
+          <h1>THE <em>FURIOUS</em></h1>
+          <div class="tfq-masthead-sub">Trivia Challenge</div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+    SCREEN 1: START
+    ============================================================ -->
+      <div id="tfqStart" class="tfq-screen tfq-active tfq-start">
+        <!-- Deskripsi pendek quiz -->
+        <p class="tfq-start-desc">
+          Sejauh mana kau kenal filem aksi paling ganas 2026?<br />
+          10 soalan. 20 saat setiap soalan. Nama kau di leaderboard?
+        </p>
+
+        <!-- Stats -->
+        <div class="tfq-start-meta">
+          <!-- TUKAR nombor soalan dan masa setiap soalan di sini -->
+          <div class="tfq-start-meta-item">
+            <div class="tfq-start-meta-num">10</div>
+            <div class="tfq-start-meta-lbl">Soalan</div>
+          </div>
+          <div class="tfq-start-meta-item">
+            <div class="tfq-start-meta-num">20s</div>
+            <div class="tfq-start-meta-lbl">Per Soalan</div>
+          </div>
+          <div class="tfq-start-meta-item">
+            <div class="tfq-start-meta-num">4</div>
+            <div class="tfq-start-meta-lbl">Pilihan</div>
+          </div>
+        </div>
+
+        <!-- Mini leaderboard top 5 -->
+        <div class="tfq-mini-lb">
+          <div class="tfq-mini-lb-hdr">
+            <div class="tfq-mini-lb-title">🏆 TOP 5 HARI INI</div>
+            <div class="tfq-mini-lb-day" id="tfqMiniDate"></div>
+          </div>
+          <div id="tfqMiniRows">
+            <div class="tfq-mini-loading">Memuatkan...</div>
+          </div>
+        </div>
+
+        <button class="tfq-btn-primary" onclick="TFQ.start()">
+          MULAKAN QUIZ
+        </button>
+        <button
+          class="tfq-btn-outline"
+          style="width: 100%"
+          onclick="TFQ.showLb()"
+        >
+          Leaderboard Penuh →
+        </button>
+      </div>
+
+      <!-- ============================================================
+    SCREEN 2: QUIZ
+    ============================================================ -->
+      <div id="tfqQuiz" class="tfq-screen">
+        <div class="tfq-prog-label">
+          <span id="tfqProgLabel">Soalan 1 / 10</span>
+          <span
+            id="tfqTimerLabel"
+            style="color: var(--tfq-gold); font-weight: 600"
+            >20s</span
+          >
+        </div>
+        <div class="tfq-prog-bar">
+          <div class="tfq-prog-fill" id="tfqProgFill" style="width: 0%"></div>
+        </div>
+        <div class="tfq-timer-bar">
+          <div
+            class="tfq-timer-fill"
+            id="tfqTimerFill"
+            style="width: 100%"
+          ></div>
+        </div>
+
+        <div class="tfq-q-inner">
+          <div class="tfq-streak" id="tfqStreak">
+            🔥 <span id="tfqStreakNum">2</span> JAWAPAN BETUL BERTURUT
+          </div>
+          <div class="tfq-q-num" id="tfqQNum">Soalan 1</div>
+          <div class="tfq-q-text" id="tfqQText"></div>
+          <div class="tfq-options" id="tfqOptions"></div>
+          <div class="tfq-feedback" id="tfqFeedback"></div>
+          <button class="tfq-next-btn" id="tfqNextBtn" onclick="TFQ.next()">
+            SETERUSNYA →
+          </button>
+        </div>
+      </div>
+
+      <!-- ============================================================
+    SCREEN 3: KEPUTUSAN
+    ============================================================ -->
+      <div id="tfqResult" class="tfq-screen tfq-result">
+        <div class="tfq-result-lbl">Skor akhir kau</div>
+        <div class="tfq-result-score" id="tfqFinalScore">0</div>
+        <div class="tfq-result-total">/ 10 soalan betul</div>
+        <div class="tfq-score-bar">
+          <div
+            class="tfq-score-bar-fill"
+            id="tfqScoreBar"
+            style="width: 0%"
+          ></div>
+        </div>
+        <div class="tfq-result-title" id="tfqResultTitle"></div>
+        <div class="tfq-result-desc" id="tfqResultDesc"></div>
+        <div id="tfqStatusBanner"></div>
+        <input
+          class="tfq-input"
+          id="tfqNameInput"
+          type="text"
+          placeholder="Nama kau untuk leaderboard"
+          maxlength="20"
+          autocomplete="off"
+        />
+        <div class="tfq-error" id="tfqInputErr"></div>
+        <button
+          class="tfq-btn-primary"
+          id="tfqSubmitBtn"
+          onclick="TFQ.submit()"
+        >
+          HANTAR KE LEADERBOARD
+        </button>
+        <button class="tfq-btn-skip" onclick="TFQ.showLb()">
+          Terus ke leaderboard
+        </button>
+      </div>
+
+      <!-- ============================================================
+    SCREEN 4: LEADERBOARD
+    ============================================================ -->
+      <div id="tfqLb" class="tfq-screen">
+        <div class="tfq-lb-title">🏆 Leaderboard</div>
+        <div class="tfq-tabs">
+          <button
+            class="tfq-tab tfq-active"
+            id="tfqTabToday"
+            onclick="TFQ.switchTab('today', this)"
+          >
+            Hari Ini
+          </button>
+          <button
+            class="tfq-tab"
+            id="tfqTabAll"
+            onclick="TFQ.switchTab('all', this)"
+          >
+            Semua Masa
+          </button>
+        </div>
+        <div id="tfqLbContent">
+          <div class="tfq-lb-loading">MEMUATKAN...</div>
+        </div>
+        <div class="tfq-btn-group">
+          <button class="tfq-btn-outline" onclick="TFQ.reset()">
+            ↩ MAIN SEMULA
+          </button>
+          <button class="tfq-btn-outline" onclick="TFQ.loadLb(TFQ.tab)">
+            ↻ REFRESH
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- end .tfq-wrap -->
+
+    <!-- ============================================================
+  JAVASCRIPT — Sepenuhnya dalam IIFE (TFQ namespace)
+  Tidak menyentuh window, document, atau global scope
+  ============================================================ -->
+    <script>
+      (function () {
+        "use strict";
+
+        // ============================================================
+        //  CONFIG — Tukar di sini untuk customize
+        // ============================================================
+        const CFG = {
+          // ── PENTING: Tukar kepada URL Cloudflare Worker kau ──
+          // Cara setup Worker: baca fail worker.js yang disertakan
+          // Selepas deploy, URL akan jadi:
+          // https://furious-quiz.NAMA-KAU.workers.dev
+          WORKER_URL: "https://furious-quiz.wandunno.workers.dev",
+
+          TOTAL_Q: 10, // Jumlah soalan (kena sama dengan array questions)
+          TIMER_SECS: 20, // Saat per soalan (tukar juga dalam CSS --tfq-timer-secs)
+          MAX_LB: 20, // Bilangan entri dalam leaderboard penuh
+          MINI_LB: 5, // Bilangan entri dalam mini leaderboard start screen
+        };
+
+        // ============================================================
+        //  SOALAN QUIZ
+        //  Format: { q: "soalan", opts: ["A","B","C","D"], ans: INDEX_BETUL }
+        //  INDEX bermula dari 0 (A=0, B=1, C=2, D=3)
+        // ============================================================
+        const QUESTIONS = [
+          {
+            q: "Siapakah pelakon utama yang memainkan watak Hakim dalam The Furious (2026)?",
+            opts: ["Zul Ariffin", "Sky Iskandar", "Hisyam Hamid", "Ikmal Amry"],
+            ans: 1,
+          },
+          {
+            q: "The Furious (2026) bergenre apa?",
+            opts: ["Drama romantis", "Seram", "Aksi, Sukan, Drama", "Komedi"],
+            ans: 2,
+          },
+          {
+            q: "Siapakah pengarah filem The Furious (2026)?",
+            opts: [
+              "Mamat Khalid",
+              "Heng Aik Siong",
+              "U-Wei Haji Saari",
+              "Farid Kamil",
+            ],
+            ans: 1,
+          },
+          {
+            q: "Siapakah penulis skrip filem The Furious (2026)?",
+            opts: [
+              "Siti Jasmina Ibrahim",
+              "Afdlin Shauki",
+              "Adnan Abu Hassan",
+              "Anwari Ashraf",
+            ],
+            ans: 0,
+          },
+          {
+            q: "The Furious (2026) merupakan filem bertema sukan apa?",
+            opts: ["Badminton", "Tinju (boxing)", "Bola sepak", "Renang"],
+            ans: 1,
+          },
+          {
+            q: "Tarikh tayangan perdana The Furious (2026) di Malaysia ialah?",
+            opts: ["15 Mei 2026", "28 Mei 2026", "1 Jun 2026", "12 Jun 2026"],
+            ans: 1,
+          },
+          {
+            q: "Antara pelakon berikut, siapa BUKAN dalam The Furious (2026)?",
+            opts: ["Zul Ariffin", "Marisa Yasmin", "Fazura", "Sandra Lim"],
+            ans: 2,
+          },
+          {
+            q: "Watak Firdaus dalam The Furious (2026) dimainkan oleh siapa?",
+            opts: [
+              "Hisyam Hamid",
+              "Sky Iskandar",
+              "Zul Ariffin",
+              "Zamarul Hisham",
+            ],
+            ans: 2,
+          },
+          {
+            q: "The Furious (2026) turut disiarkan secara rasmi di festival filem mana?",
+            opts: [
+              "Cannes Film Festival",
+              "Venice Film Festival",
+              "Busan International Film Festival",
+              "Sundance Film Festival",
+            ],
+            ans: 2,
+          },
+          {
+            q: "The Furious (2026) diproduksikan oleh syarikat mana?",
+            opts: [
+              "Astro Shaw",
+              "Edko Films / XYZ Films",
+              "TGV Pictures",
+              "GSC Movies",
+            ],
+            ans: 1,
+          },
+        ];
+
+        // ============================================================
+        //  TAHAP SKOR — Tukar mesej di sini
+        // ============================================================
+        const RATINGS = [
+          {
+            min: 9,
+            title: "LEGENDA FURIOUS",
+            desc: "Kau hafal setiap scene. Respect gila.",
+          },
+          {
+            min: 7,
+            title: "PEMINAT SETIA",
+            desc: "Hampir perfect. Ada yang terlepas sikit.",
+          },
+          {
+            min: 5,
+            title: "PENONTON BIASA",
+            desc: "Okay lah. Kena tengok lagi sekali.",
+          },
+          {
+            min: 0,
+            title: "BARU DENGAR",
+            desc: "Jangan risau, tiket wayang masih ada.",
+          },
+        ];
+
+        // ============================================================
+        //  STATE
+        // ============================================================
+        let cur = 0,
+          score = 0,
+          streak = 0,
+          answered = false;
+        let timerInterval = null;
+        let timeLeft = CFG.TIMER_SECS;
+        let lastName = "",
+          lastScore = 0;
+        const state = { tab: "today" };
+
+        // ── Helpers ──
+        const $ = (id) => document.getElementById(id);
+        const esc = (s) =>
+          String(s)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+
+        function showScreen(id) {
+          ["tfqStart", "tfqQuiz", "tfqResult", "tfqLb"].forEach((s) => {
+            const el = $(s);
+            if (el) el.classList.remove("tfq-active");
+          });
+          const target = $(id);
+          if (target) target.classList.add("tfq-active");
+        }
+
+        // ── Date label ──
+        function setDateLabel() {
+          const el = $("tfqMiniDate");
+          if (!el) return;
+          const d = new Date();
+          el.textContent = d.toLocaleDateString("ms-MY", {
+            day: "numeric",
+            month: "short",
+          });
+        }
+
+        // ── API Calls ──
+        async function apiGet() {
+          const r = await fetch(CFG.WORKER_URL + "/scores");
+          if (!r.ok) throw new Error("fetch");
+          return r.json();
+        }
+        async function apiPost(name, score) {
+          const r = await fetch(CFG.WORKER_URL + "/scores", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, score }),
+          });
+          if (!r.ok) throw new Error("post");
+          return r.json();
+        }
+
+        // ── Timer ──
+        function startTimer() {
+          clearInterval(timerInterval);
+          timeLeft = CFG.TIMER_SECS;
+          updateTimerUI();
+          timerInterval = setInterval(() => {
+            timeLeft--;
+            updateTimerUI();
+            if (timeLeft <= 0) {
+              clearInterval(timerInterval);
+              if (!answered) autoTimeout();
+            }
+          }, 1000);
+        }
+
+        function updateTimerUI() {
+          const lbl = $("tfqTimerLabel");
+          const fill = $("tfqTimerFill");
+          if (lbl) {
+            lbl.textContent = timeLeft + "s";
+            lbl.style.color =
+              timeLeft <= 5 ? "var(--tfq-red)" : "var(--tfq-gold)";
+          }
+          if (fill) {
+            const pct = (timeLeft / CFG.TIMER_SECS) * 100;
+            fill.style.width = pct + "%";
+            if (timeLeft <= 5) fill.classList.add("tfq-urgent");
+            else fill.classList.remove("tfq-urgent");
+          }
+        }
+
+        function stopTimer() {
+          clearInterval(timerInterval);
+        }
+
+        function autoTimeout() {
+          // Masa habis — tunjuk jawapan betul, streak reset
+          answered = true;
+          streak = 0;
+          const q = QUESTIONS[cur];
+          const opts = document.querySelectorAll(".tfq-opt");
+          opts.forEach((b, i) => {
+            b.classList.add("tfq-opt-locked");
+            if (i === q.ans) b.classList.add("tfq-correct");
+          });
+          const fb = $("tfqFeedback");
+          if (fb) {
+            fb.textContent = "⏱ Masa habis! Jawapan betul ditunjukkan.";
+            fb.className = "tfq-feedback tfq-fb-wrong";
+          }
+          $("tfqNextBtn").className = "tfq-next-btn tfq-show";
+          updateStreak();
+        }
+
+        // ── Streak display ──
+        function updateStreak() {
+          const el = $("tfqStreak");
+          if (!el) return;
+          if (streak >= 2) {
+            el.classList.add("tfq-visible");
+            $("tfqStreakNum").textContent = streak;
+          } else {
+            el.classList.remove("tfq-visible");
+          }
+        }
+
+        // ── Mini Leaderboard ──
+        async function loadMini() {
+          setDateLabel();
+          const el = $("tfqMiniRows");
+          if (!el) return;
+          try {
+            const all = await apiGet();
+            const today = new Date().toDateString();
+            const filtered = all
+              .filter((x) => new Date(x.date).toDateString() === today)
+              .sort(
+                (a, b) =>
+                  b.score - a.score || new Date(a.date) - new Date(b.date),
+              )
+              .slice(0, CFG.MINI_LB);
+            if (!filtered.length) {
+              el.innerHTML =
+                '<div class="tfq-mini-empty">Belum ada skor hari ini — jadi yang pertama!</div>';
+              return;
+            }
+            const medals = ["🥇", "🥈", "🥉", "4", "5"];
+            el.innerHTML = filtered
+              .map(
+                (x, i) => `
+      <div class="tfq-mini-row">
+        <div class="tfq-mini-rank ${i < 3 ? "tfq-top" : ""}">${medals[i]}</div>
+        <div class="tfq-mini-name">${esc(x.name)}</div>
+        <div class="tfq-mini-score">${x.score}/10</div>
+      </div>`,
+              )
+              .join("");
+          } catch (e) {
+            el.innerHTML = '<div class="tfq-mini-empty">—</div>';
+          }
+        }
+
+        // ── QUIZ ──
+        function renderQ() {
+          const q = QUESTIONS[cur];
+          const total = CFG.TOTAL_Q;
+          $("tfqQNum").textContent = "Soalan " + (cur + 1);
+          $("tfqQText").textContent = q.q;
+          $("tfqProgLabel").textContent = "Soalan " + (cur + 1) + " / " + total;
+          $("tfqProgFill").style.width = (cur / total) * 100 + "%";
+          const letters = ["A", "B", "C", "D"];
+          const container = $("tfqOptions");
+          container.innerHTML = "";
+          q.opts.forEach((opt, i) => {
+            const btn = document.createElement("button");
+            btn.className = "tfq-opt";
+            btn.innerHTML =
+              '<span class="tfq-opt-letter">' +
+              letters[i] +
+              "</span>" +
+              esc(opt);
+            btn.addEventListener("click", () => TFQ.pick(i));
+            container.appendChild(btn);
+          });
+          const fb = $("tfqFeedback");
+          if (fb) {
+            fb.textContent = "";
+            fb.className = "tfq-feedback";
+          }
+          $("tfqNextBtn").className = "tfq-next-btn";
+          $("tfqNextBtn").textContent =
+            cur === total - 1 ? "LIHAT KEPUTUSAN →" : "SETERUSNYA →";
+          answered = false;
+          updateStreak();
+          startTimer();
+        }
+
+        // ── Leaderboard ──
+        async function loadLb(tab) {
+          state.tab = tab;
+          const el = $("tfqLbContent");
+          el.innerHTML = '<div class="tfq-lb-loading">MEMUATKAN...</div>';
+          try {
+            let all = await apiGet();
+            if (tab === "today") {
+              const today = new Date().toDateString();
+              all = all.filter(
+                (x) => new Date(x.date).toDateString() === today,
+              );
+            }
+            all.sort(
+              (a, b) =>
+                b.score - a.score || new Date(a.date) - new Date(b.date),
+            );
+            const top = all.slice(0, CFG.MAX_LB);
+            if (!top.length) {
+              el.innerHTML =
+                '<div class="tfq-lb-empty">' +
+                (tab === "today"
+                  ? "Belum ada skor hari ini.<br>Jadilah yang pertama!"
+                  : "Belum ada rekod lagi.") +
+                "</div>";
+              return;
+            }
+            const medals = ["🥇", "🥈", "🥉"];
+            el.innerHTML = top
+              .map((x, i) => {
+                const isMe =
+                  lastName && x.name === lastName && x.score === lastScore;
+                const dt = new Date(x.date);
+                const timeStr =
+                  dt.getHours().toString().padStart(2, "0") +
+                  ":" +
+                  dt.getMinutes().toString().padStart(2, "0");
+                const medal = i < 3 ? medals[i] : i + 1;
+                return `<div class="tfq-lb-row ${isMe ? "tfq-me" : ""}">
+        <div class="tfq-lb-rank ${i < 3 ? "tfq-top" : ""}">${medal}</div>
+        <div class="tfq-lb-name">${esc(x.name)}${isMe ? ' <span style="font-size:10px;color:var(--tfq-hint)">(kau)</span>' : ""}</div>
+        <div class="tfq-lb-score">${x.score}/10</div>
+        <div class="tfq-lb-time">${timeStr}</div>
+      </div>`;
+              })
+              .join("");
+          } catch (e) {
+            el.innerHTML =
+              '<div class="tfq-lb-empty">Ralat memuatkan data.<br>Semak sambungan internet.</div>';
+          }
+        }
+
+        // ============================================================
+        //  PUBLIC API — TFQ namespace
+        // ============================================================
+        window.TFQ = {
+          tab: "today",
+
+          start() {
+            cur = 0;
+            score = 0;
+            streak = 0;
+            answered = false;
+            showScreen("tfqQuiz");
+            renderQ();
+          },
+
+          pick(idx) {
+            if (answered) return;
+            answered = true;
+            stopTimer();
+            const q = QUESTIONS[cur];
+            const opts = document.querySelectorAll(".tfq-opt");
+            opts.forEach((b, i) => {
+              b.classList.add("tfq-opt-locked");
+              if (i === q.ans) b.classList.add("tfq-correct");
+              else if (i === idx) b.classList.add("tfq-wrong");
+            });
+            const correct = idx === q.ans;
+            if (correct) {
+              score++;
+              streak++;
+            } else streak = 0;
+            const fb = $("tfqFeedback");
+            if (fb) {
+              fb.textContent = correct ? "✓ Betul!" : "✗ Salah.";
+              fb.className =
+                "tfq-feedback " + (correct ? "tfq-fb-correct" : "tfq-fb-wrong");
+            }
+            $("tfqNextBtn").className = "tfq-next-btn tfq-show";
+            updateStreak();
+          },
+
+          next() {
+            cur++;
+            if (cur >= CFG.TOTAL_Q) {
+              this.showResult();
+              return;
+            }
+            renderQ();
+          },
+
+          showResult() {
+            stopTimer();
+            showScreen("tfqResult");
+            $("tfqFinalScore").textContent = score;
+            setTimeout(() => {
+              $("tfqScoreBar").style.width = (score / CFG.TOTAL_Q) * 100 + "%";
+            }, 100);
+            const r = RATINGS.find((x) => score >= x.min);
+            $("tfqResultTitle").textContent = r.title;
+            $("tfqResultDesc").textContent = r.desc;
+            $("tfqNameInput").value = "";
+            $("tfqInputErr").textContent = "";
+            $("tfqStatusBanner").innerHTML = "";
+            const sb = $("tfqSubmitBtn");
+            sb.disabled = false;
+            sb.textContent = "HANTAR KE LEADERBOARD";
+          },
+
+          async submit() {
+            const nameEl = $("tfqNameInput");
+            const errEl = $("tfqInputErr");
+            const sb = $("tfqSubmitBtn");
+            const name = nameEl.value.trim();
+            if (!name) {
+              errEl.textContent = "Masukkan nama kau dulu!";
+              return;
+            }
+            if (name.length < 2) {
+              errEl.textContent = "Nama terlalu pendek (min 2 huruf).";
+              return;
+            }
+            errEl.textContent = "";
+            sb.disabled = true;
+            sb.textContent = "Menghantar...";
+            try {
+              await apiPost(name, score);
+              lastName = name;
+              lastScore = score;
+              $("tfqStatusBanner").innerHTML =
+                '<div class="tfq-status-ok">✓ Skor berjaya dihantar!</div>';
+              sb.textContent = "DIHANTAR ✓";
+              setTimeout(() => this.showLb(), 1200);
+            } catch (e) {
+              sb.disabled = false;
+              sb.textContent = "HANTAR KE LEADERBOARD";
+              if (CFG.WORKER_URL.includes("NAMA-KAU")) {
+                errEl.textContent =
+                  "⚠ Worker URL belum dikonfigurasi. Baca README.";
+              } else {
+                errEl.textContent =
+                  "Gagal hantar. Semak internet dan cuba lagi.";
+              }
+            }
+          },
+
+          async showLb() {
+            showScreen("tfqLb");
+            document
+              .querySelectorAll(".tfq-tab")
+              .forEach((t) => t.classList.remove("tfq-active"));
+            const todayTab = $("tfqTabToday");
+            if (todayTab) todayTab.classList.add("tfq-active");
+            this.tab = "today";
+            await loadLb("today");
+          },
+
+          switchTab(tab, el) {
+            this.tab = tab;
+            document
+              .querySelectorAll(".tfq-tab")
+              .forEach((t) => t.classList.remove("tfq-active"));
+            el.classList.add("tfq-active");
+            loadLb(tab);
+          },
+
+          loadLb(tab) {
+            loadLb(tab || this.tab);
+          },
+
+          reset() {
+            lastName = "";
+            lastScore = 0;
+            showScreen("tfqStart");
+            loadMini();
+          },
+        };
+
+        // ── Init on load ──
+        loadMini();
+      })(); // end IIFE
+    </script>
+  </body>
+</html>
